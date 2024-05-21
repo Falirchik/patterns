@@ -1,23 +1,23 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Visual\\Visual.csproj": {}
+    "E:\\repos\\patterns\\LinesAndCurvesUPD\\Visual\\Visual.csproj": {}
   },
   "projects": {
-    "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Geometry\\Geometry.csproj": {
+    "E:\\repos\\patterns\\LinesAndCurvesUPD\\Geometry\\Geometry.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Geometry\\Geometry.csproj",
+        "projectUniqueName": "E:\\repos\\patterns\\LinesAndCurvesUPD\\Geometry\\Geometry.csproj",
         "projectName": "Geometry",
-        "projectPath": "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Geometry\\Geometry.csproj",
-        "packagesPath": "C:\\Users\\frostled\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Geometry\\obj\\",
+        "projectPath": "E:\\repos\\patterns\\LinesAndCurvesUPD\\Geometry\\Geometry.csproj",
+        "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
+        "outputPath": "E:\\repos\\patterns\\LinesAndCurvesUPD\\Geometry\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\frostled\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\user\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -26,7 +26,6 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
@@ -68,24 +67,24 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.205/PortableRuntimeIdentifierGraph.json"
         }
       }
     },
-    "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Visual\\Visual.csproj": {
+    "E:\\repos\\patterns\\LinesAndCurvesUPD\\Visual\\Visual.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Visual\\Visual.csproj",
+        "projectUniqueName": "E:\\repos\\patterns\\LinesAndCurvesUPD\\Visual\\Visual.csproj",
         "projectName": "Visual",
-        "projectPath": "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Visual\\Visual.csproj",
-        "packagesPath": "C:\\Users\\frostled\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Visual\\obj\\",
+        "projectPath": "E:\\repos\\patterns\\LinesAndCurvesUPD\\Visual\\Visual.csproj",
+        "packagesPath": "C:\\Users\\user\\.nuget\\packages\\",
+        "outputPath": "E:\\repos\\patterns\\LinesAndCurvesUPD\\Visual\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
         ],
         "configFilePaths": [
-          "C:\\Users\\frostled\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\user\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.FallbackLocation.config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
@@ -94,15 +93,14 @@
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
-          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
           "net8.0-windows7.0": {
             "targetAlias": "net8.0-windows",
             "projectReferences": {
-              "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Geometry\\Geometry.csproj": {
-                "projectPath": "C:\\Users\\frostled\\Desktop\\BridgeNewTry\\LinesAndCurves\\Geometry\\Geometry.csproj"
+              "E:\\repos\\patterns\\LinesAndCurvesUPD\\Geometry\\Geometry.csproj": {
+                "projectPath": "E:\\repos\\patterns\\LinesAndCurvesUPD\\Geometry\\Geometry.csproj"
               }
             }
           }
@@ -140,7 +138,7 @@
               "privateAssets": "none"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.202/PortableRuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.205/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

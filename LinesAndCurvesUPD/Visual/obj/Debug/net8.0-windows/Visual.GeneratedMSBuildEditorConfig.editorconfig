@@ -14,6 +14,6 @@ build_property.PlatformNeutralAssembly =
 build_property.EnforceExtendedAnalyzerRules = 
 build_property._SupportedPlatformList = Linux,macOS,Windows
 build_property.RootNamespace = Visual
-build_property.ProjectDir = C:\Users\frostled\Desktop\BridgeNewTry\LinesAndCurves\Visual\
+build_property.ProjectDir = E:\repos\patterns\LinesAndCurvesUPD\Visual\
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 

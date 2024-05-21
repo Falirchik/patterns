@@ -9,3 +9,15 @@ C:\Users\frostled\Desktop\BridgeNewTry\LinesAndCurves\Geometry\obj\Debug\net8.0-
 C:\Users\frostled\Desktop\BridgeNewTry\LinesAndCurves\Geometry\obj\Debug\net8.0-windows\refint\Geometry.dll
 C:\Users\frostled\Desktop\BridgeNewTry\LinesAndCurves\Geometry\obj\Debug\net8.0-windows\Geometry.pdb
 C:\Users\frostled\Desktop\BridgeNewTry\LinesAndCurves\Geometry\obj\Debug\net8.0-windows\ref\Geometry.dll
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\bin\Debug\net8.0-windows\Geometry.deps.json
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\bin\Debug\net8.0-windows\Geometry.dll
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\bin\Debug\net8.0-windows\Geometry.pdb
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\Geometry.GeneratedMSBuildEditorConfig.editorconfig
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\Geometry.AssemblyInfoInputs.cache
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\Geometry.AssemblyInfo.cs
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\Geometry.csproj.CoreCompileInputs.cache
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\Geometry.sourcelink.json
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\Geometry.dll
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\refint\Geometry.dll
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\Geometry.pdb
+E:\repos\patterns\LinesAndCurvesUPD\Geometry\obj\Debug\net8.0-windows\ref\Geometry.dll
