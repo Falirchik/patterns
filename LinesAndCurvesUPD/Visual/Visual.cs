@@ -17,16 +17,18 @@ namespace Visual
         void ExportLineSVG(IPoint A, IPoint B, bool EnableEndCap, Color color, StreamWriter writer);
     }
 
-    public class HorizontalReflection : IDrawer
+    public class HorizontalReflection : IDrawer, ISVGExporter
     {
         public Color Color { get { return _innerDrawer.Color; } }
 
         private IDrawer _innerDrawer;
+        private ISVGExporter _innerExporter;
         private int _width;
 
-        public HorizontalReflection(IDrawer D, int Width)
+        public HorizontalReflection(IDrawer D, ISVGExporter exporter, int Width)
         {
             _innerDrawer = D;
+            _innerExporter = exporter;
             _width = Width;
         }
 
@@ -45,20 +47,35 @@ namespace Visual
         {
             A.setX(_width - A.getX());
             B.setX(_width - B.getX());
-            _innerDrawer.DrawLine(A, B, EnableEndCap, _innerDrawer.Color); 
+            _innerDrawer.DrawLine(A, B, EnableEndCap, _innerDrawer.Color);
+        }
+
+        public void ExportPointSVG(IPoint p, StreamWriter writer)
+        {
+            p.setX(_width - p.getX());
+            _innerExporter.ExportPointSVG(p, writer);
+        }
+
+        public void ExportLineSVG(IPoint A, IPoint B, bool EnableEndCap, Color color, StreamWriter writer)
+        {
+            A.setX(_width - A.getX());
+            B.setX(_width - B.getX());
+            _innerExporter.ExportLineSVG(A, B, EnableEndCap, _innerDrawer.Color, writer);
         }
     }
 
-    public class VerticalReflection : IDrawer
+    public class VerticalReflection : IDrawer, ISVGExporter
     {
         public Color Color { get { return _innerDrawer.Color; } }
 
         private IDrawer _innerDrawer;
+        private ISVGExporter _innerExporter;
         private int _height;
 
-        public VerticalReflection(IDrawer D, int Height)
+        public VerticalReflection(IDrawer D, ISVGExporter exporter, int Height)
         {
             _innerDrawer = D;
+            _innerExporter = exporter;
             _height = Height;
         }
 
@@ -72,7 +89,20 @@ namespace Visual
         {
             A.setY(_height - A.getY());
             B.setY(_height - B.getY());
-            _innerDrawer.DrawLine(A, B, EnableEndCap, _innerDrawer.Color); 
+            _innerDrawer.DrawLine(A, B, EnableEndCap, _innerDrawer.Color);
+        }
+
+        public void ExportPointSVG(IPoint p, StreamWriter writer)
+        {
+            p.setY(_height - p.getY());
+            _innerExporter.ExportPointSVG(p, writer);
+        }
+
+        public void ExportLineSVG(IPoint A, IPoint B, bool EnableEndCap, Color color, StreamWriter writer)
+        {
+            A.setY(_height - A.getY());
+            B.setY(_height - B.getY());
+            _innerExporter.ExportLineSVG(A, B, EnableEndCap, _innerDrawer.Color, writer);
         }
     }
 
@@ -174,45 +204,52 @@ namespace Visual
     }
 
     public class AVisualCurve : IDrawable, ICurve
+{
+    private ISVGExporter _svgExporter;
+    private ICurve _c;
+    private Color _color;
+
+    public AVisualCurve(ICurve c, ISVGExporter svgExporter, Color color)
     {
-        private ISVGExporter _svgExporter;
-        private ICurve _c;
-        private Color _color;
+        _c = c;
+        _svgExporter = svgExporter;
+        _color = color;
+    }
 
-        public AVisualCurve(ICurve c, ISVGExporter svgExporter, Color color)
+    public void Draw(IDrawer d)
+    {
+        d.DrawPoint(_c.GetPoint(0));
+        int n = 10;
+        for (int i = 0; i < n; ++i)
         {
-            _c = c;
-            _svgExporter = svgExporter;
-            _color = color;
-        }
-
-        public void Draw(IDrawer d)
-        {
-            d.DrawPoint(_c.GetPoint(0));
-            int n = 10;
-            for (int i = 0; i < n; ++i)
-            {
-                d.DrawLine(_c.GetPoint(i / (double)n), _c.GetPoint((i + 1) / (double)n), i == n - 1, _color);
-            }
-        }
-
-        public void ExportToSVG(StreamWriter writer)
-        {
-            Color color = _color;
-
-            _svgExporter.ExportPointSVG(_c.GetPoint(0), writer);
-            int n = 10;
-            for (int i = 0; i < n; ++i)
-            {
-                _svgExporter.ExportLineSVG(_c.GetPoint(i / (double)n), _c.GetPoint((i + 1) / (double)n), i == n - 1, color, writer);
-            }
-        }
-
-        public IPoint GetPoint(double t)
-        {
-            return _c.GetPoint(t);
+            d.DrawLine(_c.GetPoint(i / (double)n), _c.GetPoint((i + 1) / (double)n), i == n - 1, _color);
         }
     }
+
+        public void ExportToSVG(ISVGExporter exporter, StreamWriter writer)
+        {
+            if (exporter == null)
+            {
+                throw new ArgumentNullException(nameof(exporter), "Exporter cannot be null.");
+            }
+
+            Color color = _color;
+
+            exporter.ExportPointSVG(_c.GetPoint(0), writer);
+            int n = 10;
+            for (int i = 0; i < n; ++i)
+            {
+                exporter.ExportLineSVG(_c.GetPoint(i / (double)n), _c.GetPoint((i + 1) / (double)n), i == n - 1, color, writer);
+            }
+        }
+
+
+        public IPoint GetPoint(double t)
+    {
+        return _c.GetPoint(t);
+    }
+}
+
 
     //public class VisualLine : AVisualCurve
     //{
