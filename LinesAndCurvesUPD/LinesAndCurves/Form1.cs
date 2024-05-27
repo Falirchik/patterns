@@ -1,14 +1,18 @@
 using Geometry;
+using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-using Visual;
 using System.Windows.Forms;
-using System.Collections.Generic;
+using Visual;
+
 
 namespace LinesAndCurves
 {
     public partial class Form1 : Form
     {
+        private List<AVisualCurve> ListOfCurves;
+
         public Form1()
         {
             InitializeComponent();
@@ -34,10 +38,10 @@ namespace LinesAndCurves
             IPoint c = new Geometry.Point((float)rnd.Next(50, 600), (float)rnd.Next(50, 400));
             IPoint d = new Geometry.Point((float)rnd.Next(50, 600), (float)rnd.Next(50, 400));
 
-            ISVGExporter svgExporter = new SVGExporter();
-            AVisualCurve L = new AVisualCurve(new Line(a, b), svgExporter, Color.Black);
-            AVisualCurve B = new AVisualCurve(new Bezier(a, b, c, d), svgExporter, Color.Green);
-            AVisualCurve mfB = new AVisualCurve(new MoveTo(new Fragment(B, 0.66, 0.33), new Geometry.Point(300, 300)), svgExporter, Color.Black);
+            AVisualCurve L = new AVisualCurve(new Line(a, b), Color.Black);
+            AVisualCurve B = new AVisualCurve(new Bezier(a, b, c, d), Color.Green);
+            ICurve bezierCurve = new Bezier(a, b, c, d);
+            AVisualCurve mfB = new AVisualCurve(new MoveTo(new Fragment(bezierCurve, 0.66, 0.33), new Geometry.Point(300, 300)), Color.Black);
 
             ListOfCurves.Add(L);
             ListOfCurves.Add(B);
@@ -45,42 +49,95 @@ namespace LinesAndCurves
             panel1.Refresh();
         }
 
+
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
             if (ListOfCurves.Count == 0)
-            {
                 return;
-            }
 
             Color greenColor = Color.Green;
             Color blackColor = Color.Black;
-            IDrawer black, green;
+
+            IDrawer black;
+            IDrawer green;
 
             if (VReflection_checkbox.Checked && HReflection_checkbox.Checked)
             {
-                black = new VerticalReflection(new HorizontalReflection(new BlackDrawer(e.Graphics, blackColor), new SVGExporter(), panel1.Width), new SVGExporter(), panel1.Height);
-                green = new VerticalReflection(new HorizontalReflection(new GreenDrawer(e.Graphics, greenColor), new SVGExporter(), panel1.Width), new SVGExporter(), panel1.Height);
+                black = new VerticalReflection(new HorizontalReflection(new BlackDrawer(e.Graphics, true), panel1.Width), panel1.Height);
+                green = new VerticalReflection(new HorizontalReflection(new GreenDrawer(e.Graphics, false), panel1.Width), panel1.Height);
+
+
             }
             else if (VReflection_checkbox.Checked)
             {
-                black = new VerticalReflection(new BlackDrawer(e.Graphics, blackColor), new SVGExporter(), panel1.Height);
-                green = new VerticalReflection(new GreenDrawer(e.Graphics, greenColor), new SVGExporter(), panel1.Height);
+                black = new VerticalReflection(new BlackDrawer(e.Graphics, true), panel1.Height);
+                green = new VerticalReflection(new GreenDrawer(e.Graphics, false), panel1.Height);
             }
             else if (HReflection_checkbox.Checked)
             {
-                black = new HorizontalReflection(new BlackDrawer(e.Graphics, blackColor), new SVGExporter(), panel1.Width);
-                green = new HorizontalReflection(new GreenDrawer(e.Graphics, greenColor), new SVGExporter(), panel1.Width);
+                black = new HorizontalReflection(new BlackDrawer(e.Graphics, true), panel1.Width);
+                green = new HorizontalReflection(new GreenDrawer(e.Graphics, false), panel1.Width);
             }
             else
             {
-                black = new BlackDrawer(e.Graphics, blackColor);
-                green = new GreenDrawer(e.Graphics, greenColor);
+                black = new BlackDrawer(e.Graphics, true);
+                green = new GreenDrawer(e.Graphics, false);
             }
 
             ListOfCurves[0].Draw(black);
             ListOfCurves[1].Draw(green);
             ListOfCurves[2].Draw(black);
+
+
         }
+        private void Save_button_Click(object sender, EventArgs e)
+        {
+            if (ListOfCurves.Count == 0)
+                return;
+
+            SaveFileDialog saveFileDialog = new SaveFileDialog();
+            saveFileDialog.Filter = "SVG files (*.svg)|*.svg";
+            saveFileDialog.Title = "Save SVG File";
+
+            if (saveFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = saveFileDialog.FileName;
+
+                using (StreamWriter writer = new StreamWriter(filePath))
+                {
+                    WriteSvgHeader(writer, panel1.Width, panel1.Height);
+                    WriteMarkerDefinition(writer);
+
+                    // Создание экземпляра Graphics для отрисовки
+                    using (Bitmap bitmap = new Bitmap(panel1.Width, panel1.Height))
+                    using (Graphics graphics = Graphics.FromImage(bitmap))
+                    {
+                        // Создание экземпляров декораторов
+                        IDrawer blackDrawer = new SVGExportingDecorator(new BlackDrawer(graphics, true), writer, true, true);
+                        IDrawer greenDrawer = new SVGExportingDecorator(new GreenDrawer(graphics, false), writer, false, false);
+
+                        // Отрисовка кривых с использованием декораторов
+                        foreach (var curve in ListOfCurves)
+                        {
+                            if (curve.Color == Color.Black)
+                            {
+                                curve.Draw(blackDrawer);
+                            }
+                            else if (curve.Color == Color.Green)
+                            {
+                                curve.Draw(greenDrawer);
+                            }
+                        }
+                    }
+
+                    writer.WriteLine("</svg>");
+                    MessageBox.Show("Curves have been saved successfully!");
+                }
+            }
+        }
+
+
+
 
 
         private void WriteSvgHeader(StreamWriter writer, int width, int height)
@@ -101,64 +158,9 @@ namespace LinesAndCurves
             writer.WriteLine("</defs>");
         }
 
-        private void Save_button_Click(object sender, EventArgs e)
+        private void panel1_MouseClick(object sender, MouseEventArgs e)
         {
-            if (ListOfCurves.Count == 0)
-            {
-                return;
-            }
-
-            SaveFileDialog saveFileDialog = new SaveFileDialog();
-            saveFileDialog.Filter = "SVG files (*.svg)|*.svg";
-            saveFileDialog.Title = "Save SVG File";
-
-            if (saveFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                string filePath = saveFileDialog.FileName;
-
-                using (StreamWriter writer = new StreamWriter(filePath))
-                {
-                    WriteSvgHeader(writer, panel1.Width, panel1.Height);
-                    WriteMarkerDefinition(writer);
-
-                    ISVGExporter svgExporter = new SVGExporter();
-
-                    ISVGExporter blackExporter = null;
-                    ISVGExporter greenExporter = null;
-
-                    if (VReflection_checkbox.Checked && HReflection_checkbox.Checked)
-                    {
-                        
-                        blackExporter = new VerticalReflection(new HorizontalReflection(new BlackDrawer(null, Color.Black), svgExporter, panel1.Width), svgExporter, panel1.Height);
-                        greenExporter = new VerticalReflection(new HorizontalReflection(new GreenDrawer(null, Color.Green), svgExporter, panel1.Width), svgExporter, panel1.Height);
-                    }
-                    else if (VReflection_checkbox.Checked)
-                    {
-                        
-                        blackExporter = new VerticalReflection(new BlackDrawer(null, Color.Black), svgExporter, panel1.Height);
-                        greenExporter = new VerticalReflection(new GreenDrawer(null, Color.Green), svgExporter, panel1.Height);
-                    }
-                    else if (HReflection_checkbox.Checked)
-                    {
-                        
-                        blackExporter = new HorizontalReflection(new BlackDrawer(null, Color.Black), svgExporter, panel1.Width);
-                        greenExporter = new HorizontalReflection(new GreenDrawer(null, Color.Green), svgExporter, panel1.Width);
-                    }
-
-                    // Export curves with appropriate exporters
-                    ListOfCurves[0].ExportToSVG(blackExporter ?? svgExporter, writer);
-                    ListOfCurves[1].ExportToSVG(greenExporter ?? svgExporter, writer);
-                    ListOfCurves[2].ExportToSVG(blackExporter ?? svgExporter, writer);
-
-                    writer.WriteLine("</svg>");
-                    MessageBox.Show("Curves have been saved successfully!");
-                }
-            }
+            // Add mouse click event handling logic here
         }
-
-
-
-        IDrawer black, green;
-        private List<AVisualCurve> ListOfCurves;
     }
 }

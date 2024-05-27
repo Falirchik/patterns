@@ -1,5 +1,7 @@
 ﻿using Geometry;
 using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.IO;
 
 namespace Visual
 {
@@ -7,277 +9,229 @@ namespace Visual
     {
         Color Color { get; }
         void DrawPoint(IPoint p);
-        void DrawLine(IPoint a, IPoint b, bool EnableEndCap, Color color);
-
+        void DrawLine(IPoint a, IPoint b, bool enableEndCap);
     }
 
-    public interface ISVGExporter
+    public class SVGExportingDecorator : IDrawer
     {
-        void ExportPointSVG(IPoint p, StreamWriter writer);
-        void ExportLineSVG(IPoint A, IPoint B, bool EnableEndCap, Color color, StreamWriter writer);
-    }
+        private readonly IDrawer _innerDrawer;
+        private readonly StreamWriter _writer;
+        private readonly bool _isDashed;
+        private readonly bool _enableEndCap;
 
-    public class HorizontalReflection : IDrawer, ISVGExporter
-    {
-        public Color Color { get { return _innerDrawer.Color; } }
-
-        private IDrawer _innerDrawer;
-        private ISVGExporter _innerExporter;
-        private int _width;
-
-        public HorizontalReflection(IDrawer D, ISVGExporter exporter, int Width)
+        // Конструктор декоратора экспорта в SVG
+        public SVGExportingDecorator(IDrawer innerDrawer, StreamWriter writer, bool isDashed, bool enableEndCap)
         {
-            _innerDrawer = D;
-            _innerExporter = exporter;
-            _width = Width;
+            _innerDrawer = innerDrawer;
+            _writer = writer;
+            _isDashed = isDashed;
+            _enableEndCap = enableEndCap;
         }
 
-        public void setDrawer(IDrawer D)
+        // Возвращает цвет из внутреннего рисовальщика
+        public Color Color => _innerDrawer.Color;
+
+        public void DrawPoint(IPoint p)
         {
-            _innerDrawer = D;
+            ExportPointSVG(p, Color);
+            //_innerDrawer.DrawPoint(p);
+        }
+
+        public void DrawLine(IPoint a, IPoint b, bool enableEndCap)
+        {
+            ExportLineSVG(a, b, enableEndCap, Color);
+            //_innerDrawer.DrawLine(a, b, enableEndCap);
+        }
+
+
+        private void ExportPointSVG(IPoint p, Color color)
+        {
+            string shape = (color == Color.Green) ? "circle" : "rect";
+            string fill = (color == Color.Green) ? "green" : "black";
+            _writer.WriteLine($"<{shape} cx=\"{(int)p.getX()}\" cy=\"{(int)p.getY()}\" r=\"3\" width=\"5\" height=\"5\" fill=\"{fill}\" />");
+        }
+
+        private void ExportLineSVG(IPoint A, IPoint B, bool enableEndCap, Color color)
+        {
+            string strokeColor = color == Color.Green ? "green" : "black";
+            _writer.Write($"<line x1=\"{(int)A.getX()}\" y1=\"{(int)A.getY()}\" x2=\"{(int)B.getX()}\" y2=\"{(int)B.getY()}\" style=\"stroke:{strokeColor};stroke-width:3\"");
+
+            if (_isDashed)
+            {
+                _writer.Write(" stroke-dasharray=\"5,2\"");
+            }
+
+            _writer.WriteLine(" />");
+
+            // Сохранение точек в начале и в конце линии в зависимости от цвета
+            ExportPointSVG(A, color);
+            if (enableEndCap)
+            {
+                ExportPointSVG(B, color);
+            }
+        }
+
+
+
+    }
+
+    public abstract class BaseDrawer : IDrawer
+    {
+        protected Pen _pen;
+        protected Color _color;
+        protected Graphics _g;
+        protected bool _enableEndCap;
+        public Color Color => _color;
+
+        // Конструктор базового рисовальщика
+        public BaseDrawer(Graphics g, Color color, bool enableEndCap)
+        {
+            _color = color;
+            _pen = new Pen(_color, 3);
+            _g = g;
+            _enableEndCap = enableEndCap;
         }
 
         public void DrawPoint(IPoint p)
         {
-            p.setX(_width - p.getX());
-            _innerDrawer.DrawPoint(p);
+            DoDrawPoint(p);
         }
 
-        public void DrawLine(IPoint A, IPoint B, bool EnableEndCap, Color color)
+        public void DrawLine(IPoint A, IPoint B, bool enableEndCap)
         {
-            A.setX(_width - A.getX());
-            B.setX(_width - B.getX());
-            _innerDrawer.DrawLine(A, B, EnableEndCap, _innerDrawer.Color);
+            DoDrawLine(A, B, enableEndCap);
         }
 
-        public void ExportPointSVG(IPoint p, StreamWriter writer)
-        {
-            p.setX(_width - p.getX());
-            _innerExporter.ExportPointSVG(p, writer);
-        }
-
-        public void ExportLineSVG(IPoint A, IPoint B, bool EnableEndCap, Color color, StreamWriter writer)
-        {
-            A.setX(_width - A.getX());
-            B.setX(_width - B.getX());
-            _innerExporter.ExportLineSVG(A, B, EnableEndCap, _innerDrawer.Color, writer);
-        }
+        protected abstract void DoDrawPoint(IPoint p);
+        protected abstract void DoDrawLine(IPoint A, IPoint B, bool enableEndCap);
     }
 
-    public class VerticalReflection : IDrawer, ISVGExporter
+    public class GreenDrawer : BaseDrawer
     {
-        public Color Color { get { return _innerDrawer.Color; } }
-
-        private IDrawer _innerDrawer;
-        private ISVGExporter _innerExporter;
-        private int _height;
-
-        public VerticalReflection(IDrawer D, ISVGExporter exporter, int Height)
+        public GreenDrawer(Graphics g, bool enableEndCap) : base(g, Color.Green, enableEndCap)
         {
-            _innerDrawer = D;
-            _innerExporter = exporter;
-            _height = Height;
+            _pen.StartCap = LineCap.Round;
+            _pen.CustomEndCap = new AdjustableArrowCap(4, 4);
         }
 
-        public void DrawPoint(IPoint p)
+        protected override void DoDrawPoint(IPoint p)
         {
-            p.setY(_height - p.getY());
-            _innerDrawer.DrawPoint(p);
+            _g.FillEllipse(new SolidBrush(_color), (int)p.getX() - 2, (int)p.getY() - 2, 4, 4);
         }
 
-        public void DrawLine(IPoint A, IPoint B, bool EnableEndCap, Color color)
+        protected override void DoDrawLine(IPoint A, IPoint B, bool enableEndCap)
         {
-            A.setY(_height - A.getY());
-            B.setY(_height - B.getY());
-            _innerDrawer.DrawLine(A, B, EnableEndCap, _innerDrawer.Color);
-        }
-
-        public void ExportPointSVG(IPoint p, StreamWriter writer)
-        {
-            p.setY(_height - p.getY());
-            _innerExporter.ExportPointSVG(p, writer);
-        }
-
-        public void ExportLineSVG(IPoint A, IPoint B, bool EnableEndCap, Color color, StreamWriter writer)
-        {
-            A.setY(_height - A.getY());
-            B.setY(_height - B.getY());
-            _innerExporter.ExportLineSVG(A, B, EnableEndCap, _innerDrawer.Color, writer);
-        }
-    }
-
-    public class GreenDrawer : IDrawer
-    {
-        private Pen _pen;
-        private Color _color;
-        private Graphics _g;
-
-        public Color Color { get { return _color; } }
-        public GreenDrawer(Graphics g, Color color)
-        {
-            this._color = color; 
-            this._pen = new Pen(color, 3);
-            this._g = g;
-        }
-
-        public void DrawPoint(IPoint p)
-        {
-            _g.DrawEllipse(_pen, (int)p.getX(), (int)p.getY(), (float)4, (float)4);
-        }
-
-        public void DrawLine(IPoint A, IPoint B, bool EnableEndCap, Color color) 
-        {
-            Pen pen = new Pen(color, 3); 
-            if (EnableEndCap) pen.CustomEndCap = new System.Drawing.Drawing2D.AdjustableArrowCap(3, 3);
+            Pen pen = new Pen(_color, 3)
+            {
+                StartCap = LineCap.Round
+            };
+            if (enableEndCap)
+            {
+                pen.CustomEndCap = new AdjustableArrowCap(4, 4);
+            }
             _g.DrawLine(pen, (int)A.getX(), (int)A.getY(), (int)B.getX(), (int)B.getY());
-            if (EnableEndCap) pen.EndCap = new System.Drawing.Drawing2D.LineCap();
         }
-
     }
 
-    public class BlackDrawer : IDrawer
+    public class BlackDrawer : BaseDrawer
     {
-        public Color Color { get { return _color; } }
-
-        private Pen _pen;
-        private Color _color;
-        private Graphics _g;
-
-        public BlackDrawer(Graphics g, Color color)
+        public BlackDrawer(Graphics g, bool enableEndCap) : base(g, Color.Black, enableEndCap)
         {
-            this._color = color;
-            this._pen = new Pen(color, 3);
-            this._g = g;
-            _pen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
-
+            _pen.DashStyle = DashStyle.Dot; // Установка стиля пунктира
+        }
+        protected override void DoDrawPoint(IPoint p)
+        {
+            _g.FillRectangle(new SolidBrush(_color), (int)p.getX() - 2, (int)p.getY() - 2, 5, 5);
         }
 
-        public void DrawPoint(IPoint p)
-        {
-            _g.DrawRectangle(_pen, (int)(p.getX() - 2.5), (int)(p.getY() - 2.5), 5, 5);
-        }
-
-        public void DrawLine(IPoint A, IPoint B, bool EnableEndCap, Color color)
+        protected override void DoDrawLine(IPoint A, IPoint B, bool enableEndCap)
         {
             _g.DrawLine(_pen, (int)A.getX(), (int)A.getY(), (int)B.getX(), (int)B.getY());
-            if (EnableEndCap) DrawPoint(B);
+            if (enableEndCap)
+            {
+                _g.FillRectangle(new SolidBrush(_color), (int)B.getX() - 2, (int)B.getY() - 2, 5, 5);
+            }
         }
 
     }
 
-    public class SVGExporter : ISVGExporter
+    public abstract class ReflectionDrawer : IDrawer
     {
-        public void ExportPointSVG(IPoint p, StreamWriter writer)
+        private readonly IDrawer _innerDrawer;
+        protected int _size;
+
+        // Конструктор абстрактного рисовальщика для отражений
+        public ReflectionDrawer(IDrawer innerDrawer, int size)
         {
-            writer.WriteLine($"<ellipse cx=\"{(int)p.getX()}\" cy=\"{(int)p.getY()}\" rx=\"3\" ry=\"3\" />");
+            _innerDrawer = innerDrawer;
+            _size = size;
         }
 
-        public void ExportLineSVG(IPoint A, IPoint B, bool EnableEndCap, Color color, StreamWriter writer)
+        public Color Color => _innerDrawer.Color;
+
+        public void DrawPoint(IPoint p)
         {
-            string colorHex = ColorTranslator.ToHtml(color);
-            writer.WriteLine($"<line x1=\"{(int)A.getX()}\" y1=\"{(int)A.getY()}\" x2=\"{(int)B.getX()}\" y2=\"{(int)B.getY()}\"");
-            if (EnableEndCap && color == Color.Green)
-            {
-                writer.WriteLine(" marker-end=\"url(#arrow)\"");
-            }
-            if (color == Color.Black)
-            {
-                writer.WriteLine($" stroke=\"{colorHex}\" stroke-width=\"3\" stroke-dasharray=\"3,3\" />"); // Устанавливаем стиль пунктира только для черной линии
-                if (EnableEndCap)
-                {
-                    writer.WriteLine($"<circle cx=\"{(int)B.getX()}\" cy=\"{(int)B.getY()}\" r=\"3\" fill=\"black\" />"); // Добавляем кружок в конце черной линии
-                }
-            }
-            else
-            {
-                writer.WriteLine($" stroke=\"{colorHex}\" stroke-width=\"3\" />"); // Для других цветов оставляем обычный стиль
-            }
+            ReflectPoint(p);
+            _innerDrawer.DrawPoint(p);
         }
 
+        public void DrawLine(IPoint A, IPoint B, bool enableEndCap)
+        {
+            ReflectPoint(A);
+            ReflectPoint(B);
+            _innerDrawer.DrawLine(A, B, enableEndCap);
+        }
+
+        protected abstract void ReflectPoint(IPoint p);
     }
 
+    public class HorizontalReflection : ReflectionDrawer
+    {
+        public HorizontalReflection(IDrawer innerDrawer, int width) : base(innerDrawer, width) { }
 
-    // ABSTRACTION
+        protected override void ReflectPoint(IPoint p)
+        {
+            p.setX(_size - p.getX());
+        }
+    }
+
+    public class VerticalReflection : ReflectionDrawer
+    {
+        public VerticalReflection(IDrawer innerDrawer, int height) : base(innerDrawer, height) { }
+
+        protected override void ReflectPoint(IPoint p)
+        {
+            p.setY(_size - p.getY());
+        }
+    }
+
     public interface IDrawable
     {
-        public void Draw(IDrawer d);
+        void Draw(IDrawer d);
     }
 
-    public class AVisualCurve : IDrawable, ICurve
-{
-    private ISVGExporter _svgExporter;
-    private ICurve _c;
-    private Color _color;
-
-    public AVisualCurve(ICurve c, ISVGExporter svgExporter, Color color)
+    public class AVisualCurve : IDrawable
     {
-        _c = c;
-        _svgExporter = svgExporter;
-        _color = color;
-    }
+        private readonly ICurve _curve;
+        private readonly Color _color;
 
-    public void Draw(IDrawer d)
-    {
-        d.DrawPoint(_c.GetPoint(0));
-        int n = 10;
-        for (int i = 0; i < n; ++i)
+        public AVisualCurve(ICurve curve, Color color)
         {
-            d.DrawLine(_c.GetPoint(i / (double)n), _c.GetPoint((i + 1) / (double)n), i == n - 1, _color);
+            _curve = curve;
+            _color = color;
         }
-    }
+        public Color Color => _color;
 
-        public void ExportToSVG(ISVGExporter exporter, StreamWriter writer)
+        public void Draw(IDrawer drawer)
         {
-            if (exporter == null)
+            int segments = 10; // Количество сегментов для разбиения кривой
+            for (int i = 0; i < segments; ++i)
             {
-                throw new ArgumentNullException(nameof(exporter), "Exporter cannot be null.");
-            }
-
-            Color color = _color;
-
-            exporter.ExportPointSVG(_c.GetPoint(0), writer);
-            int n = 10;
-            for (int i = 0; i < n; ++i)
-            {
-                exporter.ExportLineSVG(_c.GetPoint(i / (double)n), _c.GetPoint((i + 1) / (double)n), i == n - 1, color, writer);
+                IPoint startPoint = _curve.GetPoint(i / (double)segments);
+                IPoint endPoint = _curve.GetPoint((i + 1) / (double)segments);
+                drawer.DrawLine(startPoint, endPoint, i == segments - 1); // Сохраняем отрезок между начальной и конечной точками
             }
         }
 
-
-        public IPoint GetPoint(double t)
-    {
-        return _c.GetPoint(t);
     }
-}
-
-
-    //public class VisualLine : AVisualCurve
-    //{
-    //    public VisualLine(Line l) : base(l) { }
-    //    public override void Draw(IDrawer d)
-    //    {
-    //        d.DrawPoint(_c.GetPoint(0));
-    //        int n = 10;
-    //        for (int i = 0; i < n; ++i)
-    //        {
-    //            d.DrawLine(_c.GetPoint(i / (double)n), _c.GetPoint((i + 1) / (double)n), i == n - 1);
-    //        }
-    //    }
-    //}
-
-    //public class VisualBezier : AVisualCurve
-    //{
-    //    public VisualBezier(Bezier b) : base(b) { }
-    //    public override void Draw(IDrawer d)
-    //    {
-    //        d.DrawPoint(_c.GetPoint(0));
-    //        int n = 10;
-    //        for (int i = 0; i < n; ++i)
-    //        {
-    //            d.DrawLine(_c.GetPoint(i / (double)n), _c.GetPoint((i + 1) / (double)n), i == n - 1);
-    //        }
-    //    }
-    //}
-
-
 }

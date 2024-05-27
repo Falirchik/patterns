@@ -43,6 +43,7 @@
             panel1.Size = new Size(665, 446);
             panel1.TabIndex = 0;
             panel1.Paint += panel1_Paint;
+            panel1.MouseClick += panel1_MouseClick;
             // 
             // Generate_button
             // 

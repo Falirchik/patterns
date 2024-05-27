@@ -1,0 +1,36 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "Visual/1.0.0": {
+        "dependencies": {
+          "Geometry": "1.0.0"
+        },
+        "runtime": {
+          "Visual.dll": {}
+        }
+      },
+      "Geometry/1.0.0": {
+        "runtime": {
+          "Geometry.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "Visual/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    },
+    "Geometry/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}
