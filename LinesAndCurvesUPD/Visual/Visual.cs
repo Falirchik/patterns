@@ -19,7 +19,6 @@ namespace Visual
         private readonly bool _isDashed;
         private readonly bool _enableEndCap;
 
-        // Конструктор декоратора экспорта в SVG
         public SVGExportingDecorator(IDrawer innerDrawer, StreamWriter writer, bool isDashed, bool enableEndCap)
         {
             _innerDrawer = innerDrawer;
@@ -28,21 +27,19 @@ namespace Visual
             _enableEndCap = enableEndCap;
         }
 
-        // Возвращает цвет из внутреннего рисовальщика
         public Color Color => _innerDrawer.Color;
 
         public void DrawPoint(IPoint p)
         {
             ExportPointSVG(p, Color);
-            //_innerDrawer.DrawPoint(p);
+            // _innerDrawer.DrawPoint(p); // Не вызываем внутренний метод рисования
         }
 
         public void DrawLine(IPoint a, IPoint b, bool enableEndCap)
         {
             ExportLineSVG(a, b, enableEndCap, Color);
-            //_innerDrawer.DrawLine(a, b, enableEndCap);
+            // _innerDrawer.DrawLine(a, b, enableEndCap); // Не вызываем внутренний метод рисования
         }
-
 
         private void ExportPointSVG(IPoint p, Color color)
         {
@@ -63,17 +60,14 @@ namespace Visual
 
             _writer.WriteLine(" />");
 
-            // Сохранение точек в начале и в конце линии в зависимости от цвета
             ExportPointSVG(A, color);
             if (enableEndCap)
             {
                 ExportPointSVG(B, color);
             }
         }
-
-
-
     }
+
 
     public abstract class BaseDrawer : IDrawer
     {
@@ -116,7 +110,7 @@ namespace Visual
 
         protected override void DoDrawPoint(IPoint p)
         {
-            _g.FillEllipse(new SolidBrush(_color), (int)p.getX() - 2, (int)p.getY() - 2, 4, 4);
+            _g.FillEllipse(new SolidBrush(_color), (int)p.getX() - 2, (int)p.getY() - 2, 6, 6);
         }
 
         protected override void DoDrawLine(IPoint A, IPoint B, bool enableEndCap)
@@ -127,7 +121,7 @@ namespace Visual
             };
             if (enableEndCap)
             {
-                pen.CustomEndCap = new AdjustableArrowCap(4, 4);
+                pen.CustomEndCap = _pen.CustomEndCap;
             }
             _g.DrawLine(pen, (int)A.getX(), (int)A.getY(), (int)B.getX(), (int)B.getY());
         }
@@ -137,23 +131,28 @@ namespace Visual
     {
         public BlackDrawer(Graphics g, bool enableEndCap) : base(g, Color.Black, enableEndCap)
         {
-            _pen.DashStyle = DashStyle.Dot; // Установка стиля пунктира
+            _pen.DashStyle = DashStyle.Dot;
         }
+
         protected override void DoDrawPoint(IPoint p)
         {
-            _g.FillRectangle(new SolidBrush(_color), (int)p.getX() - 2, (int)p.getY() - 2, 5, 5);
+            _g.FillRectangle(new SolidBrush(_color), (int)p.getX() - 2, (int)p.getY() - 2, 6, 6);
         }
 
         protected override void DoDrawLine(IPoint A, IPoint B, bool enableEndCap)
         {
-            _g.DrawLine(_pen, (int)A.getX(), (int)A.getY(), (int)B.getX(), (int)B.getY());
+            Pen pen = new Pen(_color, 3)
+            {
+                DashStyle = DashStyle.Dot
+            };
             if (enableEndCap)
             {
-                _g.FillRectangle(new SolidBrush(_color), (int)B.getX() - 2, (int)B.getY() - 2, 5, 5);
+                DoDrawPoint(B);
             }
+            _g.DrawLine(pen, (int)A.getX(), (int)A.getY(), (int)B.getX(), (int)B.getY());
         }
-
     }
+
 
     public abstract class ReflectionDrawer : IDrawer
     {
@@ -222,9 +221,22 @@ namespace Visual
         }
         public Color Color => _color;
 
+
         public void Draw(IDrawer drawer)
         {
             int segments = 10; // Количество сегментов для разбиения кривой
+
+            // Рисуем точку в начале кривой в зависимости от ее цвета
+            if (_color == Color.Green)
+            {
+                drawer.DrawPoint(_curve.GetPoint(0));
+            }
+            else if (_color == Color.Black)
+            {
+                drawer.DrawPoint(_curve.GetPoint(0));
+            }
+
+            // Отрисовываем сегменты кривой
             for (int i = 0; i < segments; ++i)
             {
                 IPoint startPoint = _curve.GetPoint(i / (double)segments);
@@ -232,6 +244,7 @@ namespace Visual
                 drawer.DrawLine(startPoint, endPoint, i == segments - 1); // Сохраняем отрезок между начальной и конечной точками
             }
         }
+
 
     }
 }
