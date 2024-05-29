@@ -17,14 +17,13 @@ namespace Visual
         private readonly IDrawer _innerDrawer;
         private readonly StreamWriter _writer;
         private readonly bool _isDashed;
-        private readonly bool _enableEndCap;
 
-        public SVGExportingDecorator(IDrawer innerDrawer, StreamWriter writer, bool isDashed, bool enableEndCap)
+        public SVGExportingDecorator(IDrawer innerDrawer, StreamWriter writer, bool isDashed)
         {
             _innerDrawer = innerDrawer;
             _writer = writer;
             _isDashed = isDashed;
-            _enableEndCap = enableEndCap;
+
         }
 
         public Color Color => _innerDrawer.Color;
@@ -32,41 +31,71 @@ namespace Visual
         public void DrawPoint(IPoint p)
         {
             ExportPointSVG(p, Color);
-            // _innerDrawer.DrawPoint(p); // Не вызываем внутренний метод рисования
         }
 
         public void DrawLine(IPoint a, IPoint b, bool enableEndCap)
         {
-            ExportLineSVG(a, b, enableEndCap, Color);
-            // _innerDrawer.DrawLine(a, b, enableEndCap); // Не вызываем внутренний метод рисования
+
+            ExportPolylineSVG(new List<IPoint> { a, b }, Color, enableEndCap);
+
         }
 
-        private void ExportPointSVG(IPoint p, Color color)
-        {
-            string shape = (color == Color.Green) ? "circle" : "rect";
-            string fill = (color == Color.Green) ? "green" : "black";
-            _writer.WriteLine($"<{shape} cx=\"{(int)p.getX()}\" cy=\"{(int)p.getY()}\" r=\"3\" width=\"5\" height=\"5\" fill=\"{fill}\" />");
-        }
 
-        private void ExportLineSVG(IPoint A, IPoint B, bool enableEndCap, Color color)
+        private void ExportPolylineSVG(List<IPoint> points, Color color, bool enableEndCap)
         {
+            if (points.Count < 2)
+                return;
+
             string strokeColor = color == Color.Green ? "green" : "black";
-            _writer.Write($"<line x1=\"{(int)A.getX()}\" y1=\"{(int)A.getY()}\" x2=\"{(int)B.getX()}\" y2=\"{(int)B.getY()}\" style=\"stroke:{strokeColor};stroke-width:3\"");
+            _writer.Write($"<polyline points=\"");
+            foreach (var point in points)
+            {
+                _writer.Write($"{(int)point.getX()} {(int)point.getY()},");
+            }
+            _writer.Write($"\" style=\"fill:none;stroke:{strokeColor};stroke-width:3\"");
 
-            if (_isDashed)
+            if (color == Color.Green && enableEndCap)
+            {
+                _writer.Write(" marker-end=\"url(#arrow)\""); // Стрелка в конце зеленой линии
+            }
+            else if (_isDashed)
             {
                 _writer.Write(" stroke-dasharray=\"5,2\"");
             }
 
             _writer.WriteLine(" />");
 
-            ExportPointSVG(A, color);
-            if (enableEndCap)
+            // Рисуем кружок в начале зеленой линии
+            if (color == Color.Green && enableEndCap)
             {
-                ExportPointSVG(B, color);
+                ExportPointSVG(points[1], color);
+            }
+
+            if (color == Color.Black && enableEndCap)
+            {
+                ExportPointSVG(points[points.Count - 1], color); // В конце
             }
         }
+
+
+        private void ExportPointSVG(IPoint p, Color color)
+        {
+            string shape = (color == Color.Green) ? "circle" : "rect";
+            string fill = (color == Color.Green) ? "green" : "black";
+            if (shape == "circle")
+            {
+                _writer.WriteLine($"<{shape} cx=\"{(int)p.getX()}\" cy=\"{(int)p.getY()}\" r=\"3\" fill=\"{fill}\" />");
+            }
+            else if (shape == "rect")
+            {
+                int x = (int)p.getX() - 3;
+                int y = (int)p.getY() - 3;
+                _writer.WriteLine($"<{shape} x=\"{x}\" y=\"{y}\" width=\"6\" height=\"6\" fill=\"{fill}\" />");
+            }
+        }
+
     }
+
 
 
     public abstract class BaseDrawer : IDrawer
@@ -227,11 +256,7 @@ namespace Visual
             int segments = 10; // Количество сегментов для разбиения кривой
 
             // Рисуем точку в начале кривой в зависимости от ее цвета
-            if (_color == Color.Green)
-            {
-                drawer.DrawPoint(_curve.GetPoint(0));
-            }
-            else if (_color == Color.Black)
+            if (_color == Color.Green || _color == Color.Black)
             {
                 drawer.DrawPoint(_curve.GetPoint(0));
             }

@@ -73,8 +73,8 @@ namespace LinesAndCurves
 
             if (writer != null)
             {
-                blackDrawer = new SVGExportingDecorator(blackDrawer, writer, true, true);
-                greenDrawer = new SVGExportingDecorator(greenDrawer, writer, false, false);
+                blackDrawer = new SVGExportingDecorator(blackDrawer, writer, true);
+                greenDrawer = new SVGExportingDecorator(greenDrawer, writer, false);
             }
 
             foreach (var curve in ListOfCurves)
