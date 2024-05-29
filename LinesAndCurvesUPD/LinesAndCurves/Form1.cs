@@ -49,46 +49,59 @@ namespace LinesAndCurves
             panel1.Refresh();
         }
 
-
-        private void DrawCurves(Graphics graphics, StreamWriter writer = null)
+        private IDrawer ApplyReflection(IDrawer drawer)
         {
-            IDrawer blackDrawer = new BlackDrawer(graphics, true);
-            IDrawer greenDrawer = new GreenDrawer(graphics, false);
-
             if (VReflection_checkbox.Checked && HReflection_checkbox.Checked)
             {
-                blackDrawer = new VerticalReflection(new HorizontalReflection(blackDrawer, panel1.Width), panel1.Height);
-                greenDrawer = new VerticalReflection(new HorizontalReflection(greenDrawer, panel1.Width), panel1.Height);
+                return new VerticalReflection(new HorizontalReflection(drawer, panel1.Width), panel1.Height);
             }
             else if (VReflection_checkbox.Checked)
             {
-                blackDrawer = new VerticalReflection(blackDrawer, panel1.Height);
-                greenDrawer = new VerticalReflection(greenDrawer, panel1.Height);
+                return new VerticalReflection(drawer, panel1.Height);
             }
             else if (HReflection_checkbox.Checked)
             {
-                blackDrawer = new HorizontalReflection(blackDrawer, panel1.Width);
-                greenDrawer = new HorizontalReflection(greenDrawer, panel1.Width);
+                return new HorizontalReflection(drawer, panel1.Width);
             }
 
-            if (writer != null)
-            {
-                blackDrawer = new SVGExportingDecorator(blackDrawer, writer, true);
-                greenDrawer = new SVGExportingDecorator(greenDrawer, writer, false);
-            }
+            return drawer; // ¬озвращаем исходный drawer, если отражение не примен€етс€
+        }
 
+        private void DrawCurves(Graphics graphics, StreamWriter writer = null)
+        {
             foreach (var curve in ListOfCurves)
             {
-                if (curve.Color == Color.Black)
+                IDrawer blackDrawer = new BlackDrawer(graphics, true);
+                IDrawer greenDrawer = new GreenDrawer(graphics, false);
+
+                IDrawer BDrawer = ApplyReflection(blackDrawer);
+                IDrawer GDrawer = ApplyReflection(greenDrawer);
+
+                if (writer != null)
                 {
-                    curve.Draw(blackDrawer);
+                    if (curve.Color == Color.Black)
+                    {
+                        curve.Draw(new SVGExportingDecorator(BDrawer, writer, true));
+                    }
+                    else if (curve.Color == Color.Green)
+                    {
+                        curve.Draw(new SVGExportingDecorator(GDrawer, writer, false));
+                    }
                 }
-                else if (curve.Color == Color.Green)
+                else
                 {
-                    curve.Draw(greenDrawer);
+                    if (curve.Color == Color.Black)
+                    {
+                        curve.Draw(BDrawer);
+                    }
+                    else if (curve.Color == Color.Green)
+                    {
+                        curve.Draw(GDrawer);
+                    }
                 }
             }
         }
+
 
         private void panel1_Paint(object sender, PaintEventArgs e)
         {
@@ -97,7 +110,6 @@ namespace LinesAndCurves
 
             DrawCurves(e.Graphics);
         }
-
         private void Save_button_Click(object sender, EventArgs e)
         {
             if (ListOfCurves.Count == 0)
@@ -127,7 +139,6 @@ namespace LinesAndCurves
                 }
             }
         }
-
         private void WriteSvgHeader(StreamWriter writer, int width, int height)
         {
             writer.WriteLine("<?xml version=\"1.0\" standalone=\"no\"?>");
